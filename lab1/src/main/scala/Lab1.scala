@@ -4,10 +4,10 @@ object Lab1 extends jsy.util.JsyApplication {
   
   /*
    * CSCI 3155: Lab 1
-   * <Your Name>
+   * Dasha Tarasova
    * 
-   * Partner: <Your Partner's Name>
-   * Collaborators: <Any Collaborators>
+   * Partner: Danny Tran
+   * Collaborators: That one girl in the CSEL lab, I think her names was Bekki?
    */
 
   /*
@@ -75,19 +75,28 @@ object Lab1 extends jsy.util.JsyApplication {
 
   /* Exercises */
 
-  def abs(n: Double): Double = throw new UnsupportedOperationException
+  def abs(n: Double): Double =  if ( n > 0 ) n else -n 
 
-  def xor(a: Boolean, b: Boolean): Boolean = throw new UnsupportedOperationException
+  def xor(a: Boolean, b: Boolean): Boolean = if ( a == b ) false else true
 
-  def repeat(s: String, n: Int): String = throw new UnsupportedOperationException
+  def repeat(s: String, n: Int): String = {
+    require( n >=0 )
+    s * n
+  }
   
-  def sqrtStep(c: Double, xn: Double): Double = throw new UnsupportedOperationException
+  def sqrtStep(c: Double, xn: Double): Double = xn - (( xn * xn -c)/(2 * xn))
 
-  def sqrtN(c: Double, x0: Double, n: Int): Double = throw new UnsupportedOperationException
-  
-  def sqrtErr(c: Double, x0: Double, epsilon: Double): Double =
-    throw new UnsupportedOperationException
-
+  def sqrtN(c: Double, x0: Double, n: Int): Double = {
+    require(n>=0)
+    if (n == 0) x0
+    else sqrtN(c, sqrtStep(c, x0), n-1)
+  }
+  def sqrtErr(c: Double, x0: Double, epsilon: Double): Double =   {
+    require(epsilon>0)
+    if (abs(x0 * x0 - c) > epsilon)  {
+      sqrtErr(c, sqrtStep(c, x0), epsilon)
+      } else x0 
+}
   def sqrt(c: Double): Double = {
     require(c >= 0)
     if (c == 0) 0 else sqrtErr(c, 1.0, 0.0001)
@@ -102,12 +111,21 @@ object Lab1 extends jsy.util.JsyApplication {
   def repOk(t: SearchTree): Boolean = {
     def check(t: SearchTree, min: Int, max: Int): Boolean = t match {
       case Empty => true
-      case Node(l, d, r) => throw new UnsupportedOperationException
+      case Node(l, d, r) => check(l, min, d) && check(r, d-1, max) && (min < d) && ( d < max )
     }
     check(t, Int.MinValue, Int.MaxValue)
+    
   }
-  
-  def insert(t: SearchTree, n: Int): SearchTree = throw new UnsupportedOperationException
+  def insert(t: SearchTree, n: Int): SearchTree = {
+    t match {
+      case Empty => Node(Empty, n, Empty)
+      case Node(l, d, r) => if (n < d){
+    	  						Node(insert(l, n), d,r)
+      						}else{
+    	  						Node(l, d, insert(r, n))
+      						}
+      						}
+  }
   
   def deleteMin(t: SearchTree): (SearchTree, Int) = {
     require(t != Empty)
@@ -115,17 +133,44 @@ object Lab1 extends jsy.util.JsyApplication {
       case Node(Empty, d, r) => (r, d)
       case Node(l, d, r) =>
         val (l1, m) = deleteMin(l)
-        throw new UnsupportedOperationException
+        (Node(l1, d, r), m)
     }
   }
  
-  def delete(t: SearchTree, n: Int): SearchTree = throw new UnsupportedOperationException
+  def delete(t: SearchTree, n: Int): SearchTree = t match{
+    case Empty => Empty
+    
+
+    case Node(l, d, r) => {
+    	if (n>d) Node(l,d,delete(r,n))
+    	else if (n<d) Node(delete(l,n),d,r)
+    	else {
+    	  if (l==Empty){
+    	    if (r ==Empty) Empty else r
+    	  } else if(r==Empty) l
+    	  else {
+    	    val(newtree,newvalue)=deleteMin(r)
+    	    Node(l, newvalue, newtree)
+    	  }
+    	}
+    }
+  }
   
   /* JavaScripty */
   
   def eval(e: Expr): Double = e match {
-    case N(n) => throw new UnsupportedOperationException
-    case _ => throw new UnsupportedOperationException
+    case N(n) => n
+    
+    case Unary(uop, e) => eval(e) * -1
+    case Binary(Plus,e1,e2) => eval(e1) + eval(e2)
+    case Binary(Minus,e1,e2) => eval(e1) - eval(e2)
+    case Binary(Times,e1,e2) => eval(e1) * eval(e2)
+    case Binary(Div,e1,e2) => {
+      if (eval(e2) == 0) {
+        if (eval(e1) >= 0) Double.PositiveInfinity
+        else Double.NegativeInfinity
+      } else eval(e1) / eval(e2)
+    }
   }
   
  // Interface to run your interpreter from a string.  This is convenient
